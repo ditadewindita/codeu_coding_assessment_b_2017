@@ -55,7 +55,7 @@ public final class StatementReader {
       builder.append(next);
       next = reader.next();
 
-      System.out.println(next);
+      //System.out.println(next);
     }
 
     // If next is null here it means that the last statement is incomplete.

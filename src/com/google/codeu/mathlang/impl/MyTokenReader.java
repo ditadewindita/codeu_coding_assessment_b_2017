@@ -14,11 +14,7 @@
 
 package com.google.codeu.mathlang.impl;
 
-import java.io.CharArrayReader;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-
 import com.google.codeu.mathlang.core.tokens.*;
 import com.google.codeu.mathlang.parsing.TokenReader;
 
@@ -64,10 +60,11 @@ public final class MyTokenReader implements TokenReader {
         read();
         token.append(readUntil('"'));
         read();
-      } else if(lookAhead() == ';'){
+      }
+      else if(lookAhead() == ';'){
         token.append(read());
 
-        if(!isEnd())
+        if(!isEnd() && lookAhead() == '\n')
           read();
       }
       else {
@@ -79,7 +76,7 @@ public final class MyTokenReader implements TokenReader {
 
     //System.out.println(token.toString());
 
-    return determineToken(token.toString());
+    return determineToken(token.toString().trim());
   }
 
   private void skip(char skipMarker) throws IOException{
@@ -92,6 +89,17 @@ public final class MyTokenReader implements TokenReader {
     builder.setLength(0);
 
     while(!isEnd() && (lookAhead() != marker && lookAhead() != ';')) {
+      builder.append(read());
+    }
+
+    return builder.toString();
+  }
+
+  private String readUntilSymbol() throws IOException{
+    StringBuilder builder = new StringBuilder();
+    builder.setLength(0);
+
+    while(!isEnd() && (Character.isLetterOrDigit(lookAhead()) && lookAhead() != ';')) {
       builder.append(read());
     }
 
@@ -114,7 +122,7 @@ public final class MyTokenReader implements TokenReader {
     return source.charAt(index);
   }
 
-  private Token determineToken(String s){
+  private Token determineToken(String s) throws IOException{
     if(isNumber(s))
       return new NumberToken(Double.parseDouble(s));
     if(isName(s))
@@ -124,9 +132,13 @@ public final class MyTokenReader implements TokenReader {
     return new StringToken(s);
   }
 
-  private boolean isNumber(String s){
-    for(char c : s.toCharArray())
-      if(!Character.isDigit(c))
+  private boolean isNumber(String s) throws IOException{
+    int start = 0;
+    if(s.length() > 1 && s.charAt(0) == '-' && Character.isDigit(s.charAt(1)))
+      start = 1;
+
+    for(int i = start; i < s.length(); i++)
+      if(!Character.isDigit(s.charAt(i)))
         return false;
 
     return true;
@@ -143,4 +155,5 @@ public final class MyTokenReader implements TokenReader {
   private boolean isSymbol(String s){
     return s.length() == 1 && !Character.isLetterOrDigit(s.charAt(0));
   }
+
 }
