@@ -14,9 +14,12 @@
 
 package com.google.codeu.mathlang.impl;
 
+import java.io.CharArrayReader;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
 
-import com.google.codeu.mathlang.core.tokens.Token;
+import com.google.codeu.mathlang.core.tokens.*;
 import com.google.codeu.mathlang.parsing.TokenReader;
 
 // MY TOKEN READER
@@ -27,9 +30,17 @@ import com.google.codeu.mathlang.parsing.TokenReader;
 // work with the test of the system.
 public final class MyTokenReader implements TokenReader {
 
+  private String source;
+  private StringBuilder token;
+  private int index;
+
   public MyTokenReader(String source) {
     // Your token reader will only be given a string for input. The string will
     // contain the whole source (0 or more lines).
+
+    this.source = source;
+    this.token = new StringBuilder();
+    this.index = 0;
   }
 
   @Override
@@ -41,6 +52,95 @@ public final class MyTokenReader implements TokenReader {
     // If for any reason you detect an error in the input, you may throw an IOException
     // which will stop all execution.
 
-    return null;
+    token.setLength(0);
+
+    try {
+      skip(' ');
+
+      if(isEnd())
+        return null;
+
+      if(lookAhead() == '"'){
+        read();
+        token.append(readUntil('"'));
+        read();
+      } else if(lookAhead() == ';'){
+        token.append(read());
+
+        if(!isEnd())
+          read();
+      }
+      else {
+        token.append(readUntil(' '));
+      }
+    } catch(Exception e){
+        throw new IOException(e.getMessage());
+    }
+
+    //System.out.println(token.toString());
+
+    return determineToken(token.toString());
+  }
+
+  private void skip(char skipMarker) throws IOException{
+    while(!isEnd() && lookAhead() == skipMarker)
+      read();
+  }
+
+  private String readUntil(char marker) throws IOException{
+    StringBuilder builder = new StringBuilder();
+    builder.setLength(0);
+
+    while(!isEnd() && (lookAhead() != marker && lookAhead() != ';')) {
+      builder.append(read());
+    }
+
+    return builder.toString();
+  }
+
+  private char read() throws IOException{
+    if(isEnd())
+      throw new IOException("No more characters to read.");
+    return source.charAt(index++);
+  }
+
+  private boolean isEnd(){
+    return (source.length() - index) == 0;
+  }
+
+  private char lookAhead() throws IOException{
+    if(isEnd())
+      throw new IOException("End of string!");
+    return source.charAt(index);
+  }
+
+  private Token determineToken(String s){
+    if(isNumber(s))
+      return new NumberToken(Double.parseDouble(s));
+    if(isName(s))
+      return new NameToken(s);
+    if(isSymbol(s))
+      return new SymbolToken(s.charAt(0));
+    return new StringToken(s);
+  }
+
+  private boolean isNumber(String s){
+    for(char c : s.toCharArray())
+      if(!Character.isDigit(c))
+        return false;
+
+    return true;
+  }
+
+  private boolean isName(String s){
+    for(char c : s.toCharArray())
+      if(Character.isWhitespace(c))
+        return false;
+
+    return Character.isAlphabetic(s.charAt(0));
+  }
+
+  private boolean isSymbol(String s){
+    return s.length() == 1 && !Character.isLetterOrDigit(s.charAt(0));
   }
 }

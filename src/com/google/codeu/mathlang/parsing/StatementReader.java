@@ -54,6 +54,8 @@ public final class StatementReader {
     while (next != null && !next.equals(END_OF_STATEMENT)) {
       builder.append(next);
       next = reader.next();
+
+      System.out.println(next);
     }
 
     // If next is null here it means that the last statement is incomplete.
