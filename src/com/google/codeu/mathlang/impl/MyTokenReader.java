@@ -60,6 +60,8 @@ public final class MyTokenReader implements TokenReader {
         read();
         token.append(readUntil('"'));
         read();
+
+        return new StringToken(token.toString());
       }
       else if(lookAhead() == ';'){
         token.append(read());
@@ -74,7 +76,7 @@ public final class MyTokenReader implements TokenReader {
         throw new IOException(e.getMessage());
     }
 
-    //System.out.println(token.toString());
+    //System.out.println("--------TOKEN: " + token.toString());
 
     return determineToken(token.toString().trim());
   }
@@ -89,17 +91,6 @@ public final class MyTokenReader implements TokenReader {
     builder.setLength(0);
 
     while(!isEnd() && (lookAhead() != marker && lookAhead() != ';')) {
-      builder.append(read());
-    }
-
-    return builder.toString();
-  }
-
-  private String readUntilSymbol() throws IOException{
-    StringBuilder builder = new StringBuilder();
-    builder.setLength(0);
-
-    while(!isEnd() && (Character.isLetterOrDigit(lookAhead()) && lookAhead() != ';')) {
       builder.append(read());
     }
 
